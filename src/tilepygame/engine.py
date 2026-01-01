@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, TYPE_CHECKING
+from typing import Callable
 import sys
 
 import pygame
 
-if TYPE_CHECKING:
-    from .tilemap import TileMap
+from .tilemap import TileMap
 
 
 @dataclass
@@ -63,7 +62,6 @@ class Game:
         Returns:
             The loaded TileMap instance
         """
-        from .tilemap import TileMap
         self._tilemap = TileMap(path)
         return self._tilemap
     
