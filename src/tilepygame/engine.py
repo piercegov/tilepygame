@@ -16,8 +16,9 @@ class Internals:
     width: int
     height: int
     screen: pygame.Surface
+    camera: Camera
+    tilemap: TileMap | None = None
     dt: float = 0.0
-    camera_offset: tuple[float, float] = (0, 0)
 
 
 class Game:
@@ -40,24 +41,18 @@ class Game:
         
         self._clock = pygame.time.Clock()
         self._fps = fps
-        self._tilemap: TileMap | None = None
-        self._camera = Camera(width, height)
         
         self._internals = Internals(
             width=width,
             height=height,
-            screen=self._screen
+            screen=self._screen,
+            camera=Camera(width, height)
         )
     
     @property
-    def tilemap(self) -> TileMap | None:
-        """The currently loaded tilemap."""
-        return self._tilemap
-    
-    @property
-    def camera(self) -> Camera:
-        """The game camera for following targets and scrolling."""
-        return self._camera
+    def internals(self) -> Internals:
+        """Access to game state for setup and runtime."""
+        return self._internals
     
     def load_tilemap(self, path: str) -> TileMap:
         """
@@ -71,26 +66,14 @@ class Game:
         Returns:
             The loaded TileMap instance
         """
-        self._tilemap = TileMap(path)
-        self._camera.set_bounds(
+        tilemap = TileMap(path)
+        self._internals.tilemap = tilemap
+        self._internals.camera.set_bounds(
             0, 0,
-            self._tilemap.pixel_width,
-            self._tilemap.pixel_height
+            tilemap.pixel_width,
+            tilemap.pixel_height
         )
-        return self._tilemap
-    
-    def set_camera_offset(self, x: float, y: float) -> None:
-        """
-        Manually set the camera offset for tilemap rendering.
-        
-        Note: If using camera.follow(), this will be overwritten each frame.
-        
-        Args:
-            x: Camera x offset
-            y: Camera y offset
-        """
-        self._camera.x = x
-        self._camera.y = y
+        return tilemap
     
     def run(self, game_loop: Callable[[Internals], None]) -> None:
         """
@@ -108,13 +91,12 @@ class Game:
                     pygame.quit()
                     sys.exit()
             
-            if self._tilemap:
-                self._tilemap.update(dt)
+            if self._internals.tilemap:
+                self._internals.tilemap.update(dt)
             
             game_loop(self._internals)
             
-            self._camera.update(dt)
-            self._internals.camera_offset = self._camera.offset
+            self._internals.camera.update(dt)
             
             self._render()
     
@@ -122,7 +104,10 @@ class Game:
         """Internal render method called each frame."""
         self._screen.fill((0, 0, 0))
         
-        if self._tilemap:
-            self._tilemap.render(self._screen, self._camera.offset)
+        if self._internals.tilemap:
+            self._internals.tilemap.render(
+                self._screen,
+                self._internals.camera.offset
+            )
         
         pygame.display.flip()
