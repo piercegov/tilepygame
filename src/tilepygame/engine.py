@@ -80,7 +80,9 @@ class Game:
         Start the game loop.
         
         Args:
-            game_loop: A function that receives Internals and runs each frame
+            game_loop: A function that receives Internals and runs each frame.
+                       The tilemap is rendered before this callback, so any
+                       drawing done here will appear on top of the map.
         """
         while True:
             dt = self._clock.tick(self._fps) / 1000.0
@@ -94,20 +96,16 @@ class Game:
             if self._internals.tilemap:
                 self._internals.tilemap.update(dt)
             
-            game_loop(self._internals)
-            
             self._internals.camera.update(dt)
             
-            self._render()
-    
-    def _render(self) -> None:
-        """Internal render method called each frame."""
-        self._screen.fill((0, 0, 0))
-        
-        if self._internals.tilemap:
-            self._internals.tilemap.render(
-                self._screen,
-                self._internals.camera.offset
-            )
-        
-        pygame.display.flip()
+            self._screen.fill((0, 0, 0))
+            
+            if self._internals.tilemap:
+                self._internals.tilemap.render(
+                    self._screen,
+                    self._internals.camera.offset
+                )
+            
+            game_loop(self._internals)
+            
+            pygame.display.flip()
