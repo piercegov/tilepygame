@@ -21,11 +21,22 @@ class Camera:
         self.y: float = 0.0
         self.width = width
         self.height = height
+        self.zoom: float = 1.0
         self.bounds: tuple[float, float, float, float] | None = None
         self.smoothing: float = 0.1
         
         self._target_x: float = 0.0
         self._target_y: float = 0.0
+    
+    @property
+    def view_width(self) -> float:
+        """Effective viewport width accounting for zoom."""
+        return self.width / self.zoom
+    
+    @property
+    def view_height(self) -> float:
+        """Effective viewport height accounting for zoom."""
+        return self.height / self.zoom
     
     def follow(self, target_x: float, target_y: float) -> None:
         """
@@ -37,8 +48,8 @@ class Camera:
             target_x: Target world x coordinate
             target_y: Target world y coordinate
         """
-        self._target_x = target_x - self.width / 2
-        self._target_y = target_y - self.height / 2
+        self._target_x = target_x - self.view_width / 2
+        self._target_y = target_y - self.view_height / 2
     
     def set_bounds(self, min_x: float, min_y: float, max_x: float, max_y: float) -> None:
         """
@@ -83,16 +94,16 @@ class Camera:
         
         min_x, min_y, max_x, max_y = self.bounds
         
-        max_camera_x = max_x - self.width
-        max_camera_y = max_y - self.height
+        max_camera_x = max_x - self.view_width
+        max_camera_y = max_y - self.view_height
         
         if max_camera_x < min_x:
-            self.x = (min_x + max_x - self.width) / 2
+            self.x = (min_x + max_x - self.view_width) / 2
         else:
             self.x = max(min_x, min(self.x, max_camera_x))
         
         if max_camera_y < min_y:
-            self.y = (min_y + max_y - self.height) / 2
+            self.y = (min_y + max_y - self.view_height) / 2
         else:
             self.y = max(min_y, min(self.y, max_camera_y))
     

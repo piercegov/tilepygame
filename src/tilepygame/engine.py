@@ -21,12 +21,12 @@ class Internals:
     dt: float = 0.0
     
     def screen_to_world(self, screen_x: float, screen_y: float) -> tuple[float, float]:
-        """Convert screen coordinates to world coordinates using camera offset."""
-        return screen_x + self.camera.x, screen_y + self.camera.y
+        """Convert screen coordinates to world coordinates using camera offset and zoom."""
+        return screen_x / self.camera.zoom + self.camera.x, screen_y / self.camera.zoom + self.camera.y
     
     def world_to_screen(self, world_x: float, world_y: float) -> tuple[float, float]:
-        """Convert world coordinates to screen coordinates using camera offset."""
-        return world_x - self.camera.x, world_y - self.camera.y
+        """Convert world coordinates to screen coordinates using camera offset and zoom."""
+        return (world_x - self.camera.x) * self.camera.zoom, (world_y - self.camera.y) * self.camera.zoom
     
     def world_to_tile(self, world_x: float, world_y: float) -> tuple[int, int] | None:
         """Convert world coordinates to tile coordinates. Returns None if no tilemap."""
@@ -122,6 +122,9 @@ class Game:
                        The tilemap is rendered before this callback, so any
                        drawing done here will appear on top of the map.
         """
+        render_surface: pygame.Surface | None = None
+        last_zoom: float = 0.0
+        
         while True:
             dt = self._clock.tick(self._fps) / 1000.0
             self._internals.dt = dt
@@ -136,14 +139,32 @@ class Game:
             
             self._internals.camera.update(dt)
             
-            self._screen.fill((0, 0, 0))
+            zoom = self._internals.camera.zoom
+            
+            if zoom != 1.0:
+                if render_surface is None or zoom != last_zoom:
+                    render_w = int(self._internals.width / zoom)
+                    render_h = int(self._internals.height / zoom)
+                    render_surface = pygame.Surface((render_w, render_h))
+                    last_zoom = zoom
+                
+                render_surface.fill((0, 0, 0))
+                target = render_surface
+            else:
+                self._screen.fill((0, 0, 0))
+                target = self._screen
+            
+            self._internals.screen = target
             
             if self._internals.tilemap:
                 self._internals.tilemap.render(
-                    self._screen,
+                    target,
                     self._internals.camera.offset
                 )
             
             game_loop(self._internals)
+            
+            if zoom != 1.0 and render_surface is not None:
+                pygame.transform.scale(render_surface, (self._internals.width, self._internals.height), self._screen)
             
             pygame.display.flip()
