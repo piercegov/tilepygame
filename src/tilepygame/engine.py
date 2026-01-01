@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable
 import sys
 
@@ -19,6 +19,7 @@ class Internals:
     camera: Camera
     tilemap: TileMap | None = None
     dt: float = 0.0
+    events: list[pygame.event.Event] = field(default_factory=list)
     
     def screen_to_world(self, screen_x: float, screen_y: float) -> tuple[float, float]:
         """Convert screen coordinates to world coordinates using camera offset and zoom."""
@@ -129,7 +130,8 @@ class Game:
             dt = self._clock.tick(self._fps) / 1000.0
             self._internals.dt = dt
             
-            for event in pygame.event.get():
+            self._internals.events = pygame.event.get()
+            for event in self._internals.events:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
