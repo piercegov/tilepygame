@@ -135,6 +135,12 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                elif event.type == pygame.MOUSEWHEEL:
+                    cam = self._internals.camera
+                    if cam.scroll_zoom_enabled:
+                        cam.zoom = max(cam.min_zoom, min(cam.max_zoom, cam.zoom + event.y * cam.zoom_speed))
+                        cam._update_target()
+                        cam.snap_to_target()
             
             if self._internals.tilemap:
                 self._internals.tilemap.update(dt)

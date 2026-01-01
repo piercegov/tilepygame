@@ -22,11 +22,17 @@ class Camera:
         self.width = width
         self.height = height
         self.zoom: float = 1.0
+        self.min_zoom: float = 1.0
+        self.max_zoom: float = 4.0
+        self.zoom_speed: float = 0.25
+        self.scroll_zoom_enabled: bool = True
         self.bounds: tuple[float, float, float, float] | None = None
         self.smoothing: float = 0.1
         
         self._target_x: float = 0.0
         self._target_y: float = 0.0
+        self._follow_x: float = 0.0
+        self._follow_y: float = 0.0
     
     @property
     def view_width(self) -> float:
@@ -48,8 +54,14 @@ class Camera:
             target_x: Target world x coordinate
             target_y: Target world y coordinate
         """
-        self._target_x = target_x - self.view_width / 2
-        self._target_y = target_y - self.view_height / 2
+        self._follow_x = target_x
+        self._follow_y = target_y
+        self._update_target()
+    
+    def _update_target(self) -> None:
+        """Recalculate camera target from followed position and current zoom."""
+        self._target_x = self._follow_x - self.view_width / 2
+        self._target_y = self._follow_y - self.view_height / 2
     
     def set_bounds(self, min_x: float, min_y: float, max_x: float, max_y: float) -> None:
         """
