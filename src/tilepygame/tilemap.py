@@ -133,6 +133,42 @@ class TileMap:
         """
         self.render(surface, camera_offset, layers=[layer_name])
     
+    def draw_grid(
+        self,
+        surface: pygame.Surface,
+        camera_offset: tuple[float, float] = (0, 0),
+        color: tuple[int, int, int, int] = (255, 255, 255, 60)
+    ) -> None:
+        """
+        Draw tile border grid for visualization.
+        
+        Args:
+            surface: The pygame surface to render to
+            camera_offset: (x, y) offset for camera scrolling
+            color: RGBA color tuple for grid lines
+        """
+        tw = self.tile_width
+        th = self.tile_height
+        cam_x, cam_y = camera_offset
+        screen_w, screen_h = surface.get_size()
+
+        start_tile_x = max(0, int(cam_x // tw))
+        start_tile_y = max(0, int(cam_y // th))
+        end_tile_x = min(self.width, int((cam_x + screen_w) // tw) + 1)
+        end_tile_y = min(self.height, int((cam_y + screen_h) // th) + 1)
+
+        grid_surface = pygame.Surface((screen_w, screen_h), pygame.SRCALPHA)
+
+        for tx in range(start_tile_x, end_tile_x + 1):
+            screen_x = int(tx * tw - cam_x)
+            pygame.draw.line(grid_surface, color, (screen_x, 0), (screen_x, screen_h))
+
+        for ty in range(start_tile_y, end_tile_y + 1):
+            screen_y = int(ty * th - cam_y)
+            pygame.draw.line(grid_surface, color, (0, screen_y), (screen_w, screen_y))
+
+        surface.blit(grid_surface, (0, 0))
+    
     def get_layer_names(self) -> list[str]:
         """Get names of all layers in the map."""
         return [layer.name for layer in self._tmx.layers]
