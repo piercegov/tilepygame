@@ -280,29 +280,4 @@ class TileMap:
             List of pygame Rect objects
         """
         return [obj.rect for obj in self.get_objects(layer_name)]
-    
-    def world_to_tile(self, x: float, y: float) -> tuple[int, int]:
-        """
-        Convert world coordinates to tile coordinates.
-        
-        Args:
-            x: World x coordinate
-            y: World y coordinate
-            
-        Returns:
-            (tile_x, tile_y) tuple
-        """
-        return int(x // self.tile_width), int(y // self.tile_height)
-    
-    def tile_to_world(self, tile_x: int, tile_y: int) -> tuple[float, float]:
-        """
-        Convert tile coordinates to world coordinates (top-left of tile).
-        
-        Args:
-            tile_x: Tile x coordinate
-            tile_y: Tile y coordinate
-            
-        Returns:
-            (world_x, world_y) tuple
-        """
-        return float(tile_x * self.tile_width), float(tile_y * self.tile_height)
+

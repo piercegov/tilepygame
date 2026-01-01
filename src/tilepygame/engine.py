@@ -19,6 +19,44 @@ class Internals:
     camera: Camera
     tilemap: TileMap | None = None
     dt: float = 0.0
+    
+    def screen_to_world(self, screen_x: float, screen_y: float) -> tuple[float, float]:
+        """Convert screen coordinates to world coordinates using camera offset."""
+        return screen_x + self.camera.x, screen_y + self.camera.y
+    
+    def world_to_screen(self, world_x: float, world_y: float) -> tuple[float, float]:
+        """Convert world coordinates to screen coordinates using camera offset."""
+        return world_x - self.camera.x, world_y - self.camera.y
+    
+    def world_to_tile(self, world_x: float, world_y: float) -> tuple[int, int] | None:
+        """Convert world coordinates to tile coordinates. Returns None if no tilemap."""
+        if self.tilemap is None:
+            return None
+        return (
+            int(world_x // self.tilemap.tile_width),
+            int(world_y // self.tilemap.tile_height)
+        )
+    
+    def tile_to_world(self, tile_x: int, tile_y: int) -> tuple[float, float] | None:
+        """Convert tile coordinates to world coordinates (top-left of tile). Returns None if no tilemap."""
+        if self.tilemap is None:
+            return None
+        return (
+            float(tile_x * self.tilemap.tile_width),
+            float(tile_y * self.tilemap.tile_height)
+        )
+    
+    def screen_to_tile(self, screen_x: float, screen_y: float) -> tuple[int, int] | None:
+        """Convert screen coordinates to tile coordinates. Returns None if no tilemap."""
+        world = self.screen_to_world(screen_x, screen_y)
+        return self.world_to_tile(*world)
+    
+    def tile_to_screen(self, tile_x: int, tile_y: int) -> tuple[float, float] | None:
+        """Convert tile coordinates to screen coordinates. Returns None if no tilemap."""
+        world = self.tile_to_world(tile_x, tile_y)
+        if world is None:
+            return None
+        return self.world_to_screen(*world)
 
 
 class Game:

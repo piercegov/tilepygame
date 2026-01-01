@@ -84,8 +84,7 @@ def main() -> None:
         pressed = pygame.mouse.get_pressed()[0]
         if pressed and not was_pressed:
             mx, my = pygame.mouse.get_pos()
-            world_x = mx + g.camera.offset[0]
-            world_y = my + g.camera.offset[1]
+            world_x, world_y = g.screen_to_world(mx, my)
             player.set_target(world_x, world_y)
         was_pressed = pressed
         
