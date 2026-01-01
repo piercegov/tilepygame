@@ -6,6 +6,7 @@ import sys
 
 import pygame
 
+from .camera import Camera
 from .tilemap import TileMap
 
 
@@ -40,6 +41,7 @@ class Game:
         self._clock = pygame.time.Clock()
         self._fps = fps
         self._tilemap: TileMap | None = None
+        self._camera = Camera(width, height)
         
         self._internals = Internals(
             width=width,
@@ -52,9 +54,16 @@ class Game:
         """The currently loaded tilemap."""
         return self._tilemap
     
+    @property
+    def camera(self) -> Camera:
+        """The game camera for following targets and scrolling."""
+        return self._camera
+    
     def load_tilemap(self, path: str) -> TileMap:
         """
         Load a Tiled map from a TMX file.
+        
+        Automatically sets camera bounds to the map dimensions.
         
         Args:
             path: Path to the .tmx file
@@ -63,17 +72,25 @@ class Game:
             The loaded TileMap instance
         """
         self._tilemap = TileMap(path)
+        self._camera.set_bounds(
+            0, 0,
+            self._tilemap.pixel_width,
+            self._tilemap.pixel_height
+        )
         return self._tilemap
     
     def set_camera_offset(self, x: float, y: float) -> None:
         """
-        Set the camera offset for tilemap rendering.
+        Manually set the camera offset for tilemap rendering.
+        
+        Note: If using camera.follow(), this will be overwritten each frame.
         
         Args:
             x: Camera x offset
             y: Camera y offset
         """
-        self._internals.camera_offset = (x, y)
+        self._camera.x = x
+        self._camera.y = y
     
     def run(self, game_loop: Callable[[Internals], None]) -> None:
         """
@@ -96,6 +113,9 @@ class Game:
             
             game_loop(self._internals)
             
+            self._camera.update(dt)
+            self._internals.camera_offset = self._camera.offset
+            
             self._render()
     
     def _render(self) -> None:
@@ -103,6 +123,6 @@ class Game:
         self._screen.fill((0, 0, 0))
         
         if self._tilemap:
-            self._tilemap.render(self._screen, self._internals.camera_offset)
+            self._tilemap.render(self._screen, self._camera.offset)
         
         pygame.display.flip()
